@@ -48,9 +48,19 @@ export class MockInterpreter implements OrderInterpreter {
 
     // Product reference extraction
     let productRef: string | null = null;
-    if (clean.includes('ly 500ml trong suốt') || clean.includes('ly nhựa 500ml trong suốt')) {
+    if (
+      clean.includes('ly 500ml trong suốt') ||
+      clean.includes('ly nhựa 500ml trong suốt') ||
+      clean.includes('ly 500ml trong suot') ||
+      clean.includes('ly nhua 500ml trong suot')
+    ) {
       productRef = 'ly 500ml trong suốt';
-    } else if (clean.includes('ly 500ml có nắp') || clean.includes('ly có nắp')) {
+    } else if (
+      clean.includes('ly 500ml có nắp') ||
+      clean.includes('ly có nắp') ||
+      clean.includes('ly 500ml co nap') ||
+      clean.includes('ly co nap')
+    ) {
       productRef = 'ly 500ml có nắp';
     } else if (clean.includes('ly 500ml') || clean.includes('ly nhựa 500ml')) {
       productRef = 'ly 500ml';
