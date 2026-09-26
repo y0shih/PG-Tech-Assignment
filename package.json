@@ -1,0 +1,25 @@
+{
+  "name": "order-desk-agent",
+  "version": "1.0.0",
+  "description": "Delta Packaging Supply Order Desk Agent POC",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "tsx src/api/server.ts",
+    "eval": "tsx eval/runner.ts",
+    "eval:jev": "DECISION_ADVISOR=jev tsx eval/runner.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.7"
+  }
+}
