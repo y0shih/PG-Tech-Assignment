@@ -14,10 +14,11 @@ import { DeterministicAdvisor } from '../../src/advisors/deterministic-advisor.j
 describe('HTTP API Endpoints', () => {
   let server: any;
   let baseUrl: string;
+  let pipeline: OrderDeskPipeline;
 
   beforeAll(async () => {
     const db = initDatabase(':memory:');
-    const pipeline = new OrderDeskPipeline({
+    pipeline = new OrderDeskPipeline({
       db,
       customerRepo: new JsonCustomerRepository(),
       productRepo: new JsonProductRepository(),
@@ -36,7 +37,7 @@ describe('HTTP API Endpoints', () => {
   });
 
   afterAll(async () => {
-    await new Promise<void>((resolve) => server.close(resolve));
+    await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
   it('should process order via POST /v1/orders/process', async () => {
@@ -82,6 +83,60 @@ describe('HTTP API Endpoints', () => {
   it('should return 404 for unknown decision ID', async () => {
     const res = await fetch(`${baseUrl}/v1/decisions/unknown-run-id`);
     expect(res.status).toBe(404);
+  });
+
+  it('should return 400 when JSON is malformed on POST /v1/orders/process', async () => {
+    const res = await fetch(`${baseUrl}/v1/orders/process`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'invalid-json{',
+    });
+
+    expect(res.status).toBe(400);
+    const body: any = await res.json();
+    expect(body.error).toBe('Invalid JSON payload');
+  });
+
+  it('should support querying decisions with dec_ prefix', async () => {
+    const res = await fetch(`${baseUrl}/v1/orders/process`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messageId: 'api-msg-dec-prefix',
+        source: 'zalo',
+        sender: '0901234567',
+        content: 'Cho em 5 thung ly 500ml trong suot nha',
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const body: any = await res.json();
+    expect(body.decisionId).toBe(`dec_${body.runId}`);
+
+    // Query with decisionId (having dec_ prefix)
+    const getRes = await fetch(`${baseUrl}/v1/decisions/${body.decisionId}`);
+    expect(getRes.status).toBe(200);
+    const record: any = await getRes.json();
+    expect(record.runId).toBe(body.runId);
+  });
+
+  it('should return 500 if database read fails on GET /v1/decisions/:id', async () => {
+    const mockDb = {
+      prepare: () => {
+        throw new Error('Database disk image is malformed');
+      },
+    } as any;
+    const errServer = createServer(buildApiHandler(pipeline, mockDb));
+    await new Promise<void>((resolve) => errServer.listen(0, resolve));
+    const errPort = (errServer.address() as any).port;
+    try {
+      const res = await fetch(`http://127.0.0.1:${errPort}/v1/decisions/any-id`);
+      expect(res.status).toBe(500);
+      const body: any = await res.json();
+      expect(body.error).toContain('Database disk image is malformed');
+    } finally {
+      await new Promise<void>((resolve) => errServer.close(() => resolve()));
+    }
   });
 
   it('should return 404 for unknown route', async () => {

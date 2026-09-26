@@ -11,8 +11,16 @@ export function buildApiHandler(pipeline: OrderDeskPipeline, db: DatabaseSync) {
       let bodyStr = '';
       req.on('data', chunk => { bodyStr += chunk; });
       req.on('end', async () => {
+        let payload: any;
         try {
-          const payload = JSON.parse(bodyStr || '{}');
+          payload = JSON.parse(bodyStr || '{}');
+        } catch {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+          return;
+        }
+
+        try {
           if (!payload.messageId || !payload.sender || !payload.content) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'messageId, sender, and content are required' }));
@@ -43,16 +51,23 @@ export function buildApiHandler(pipeline: OrderDeskPipeline, db: DatabaseSync) {
     }
 
     if (req.method === 'GET' && url.pathname.startsWith('/v1/decisions/')) {
-      const id = url.pathname.replace('/v1/decisions/', '').trim();
-      const record = getDecisionRecord(db, id);
-      if (!record) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Decision record not found' }));
+      const rawId = url.pathname.replace('/v1/decisions/', '').trim();
+      const runId = rawId.replace(/^dec_/, '');
+      try {
+        const record = getDecisionRecord(db, runId);
+        if (!record) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Decision record not found' }));
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(record));
+        return;
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: (err as Error).message }));
         return;
       }
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(record));
-      return;
     }
 
     res.writeHead(404, { 'Content-Type': 'application/json' });
