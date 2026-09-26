@@ -16,7 +16,7 @@ import type { InventoryRepository } from '../tools/inventory.js';
 import type { PricingRepository } from '../tools/pricing.js';
 import type { MessagingService } from '../tools/messaging.js';
 import type { OrderInterpreter } from '../agent/interpreter.js';
-import type { DecisionAdvisor } from '../advisors/decision-advisor.js';
+import type { DecisionAdvisor, AdvisorRecommendation } from '../advisors/decision-advisor.js';
 import { evaluatePolicy } from '../policy/policy-engine.js';
 import { executeAction } from './action-executor.js';
 import type { FailureInjectionMode } from '../infrastructure/reliability.js';
@@ -41,6 +41,8 @@ export interface PipelineOverrides {
 }
 
 export class OrderDeskPipeline {
+  processOrder = this.processMessage.bind(this);
+
   constructor(private deps: PipelineDependencies) {}
 
   async processMessage(message: InboundMessage, overrides: PipelineOverrides = {}): Promise<DecisionRecord> {
@@ -167,20 +169,29 @@ export class OrderDeskPipeline {
     });
 
     // 5. Decision Advisor
-    const advisorResult = await this.deps.advisor.advise(
-      {
-        isDuplicate: false,
-        interpretationValid,
-        intent: interpretation?.intent ?? 'UNKNOWN',
-        toolFailureReason,
-        customerResolution: { records: customerRecords, ambiguous: customerAmbiguous },
-        productResolution: { records: productRecords, ambiguous: productAmbiguous },
-        quantity: interpretation?.quantity ?? null,
-        price: unitPrice,
-        stock: stockCount,
-      },
-      policyResult
-    );
+    let advisorResult: AdvisorRecommendation;
+    try {
+      advisorResult = await this.deps.advisor.advise(
+        {
+          isDuplicate: false,
+          interpretationValid,
+          intent: interpretation?.intent ?? 'UNKNOWN',
+          toolFailureReason,
+          customerResolution: { records: customerRecords, ambiguous: customerAmbiguous },
+          productResolution: { records: productRecords, ambiguous: productAmbiguous },
+          quantity: interpretation?.quantity ?? null,
+          price: unitPrice,
+          stock: stockCount,
+        },
+        policyResult
+      );
+    } catch {
+      advisorResult = {
+        provider: 'deterministic',
+        recommendation: 'NEEDS_HUMAN_REVIEW',
+        notes: 'Advisor invocation failed; fell back to safe human review.',
+      };
+    }
 
     // 6. Action Execution
     const actionKey = `act_${fingerprint}_${policyResult.action}`;

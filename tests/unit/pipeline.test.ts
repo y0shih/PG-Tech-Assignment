@@ -262,6 +262,56 @@ describe('OrderDeskPipeline', () => {
     expect(record.decision.action).toBe('QUOTE');
     expect(record.action.executed).toBe(false);
   });
+
+  it('should fall back to safe human review recommendation when advisor throws error', async () => {
+    const failingAdvisorPipeline = new OrderDeskPipeline({
+      db,
+      customerRepo: new JsonCustomerRepository(),
+      productRepo: new JsonProductRepository(),
+      inventoryRepo: new JsonInventoryRepository(),
+      pricingRepo: new JsonPricingRepository(),
+      messagingService,
+      interpreter: new MockInterpreter(),
+      advisor: {
+        advise: async () => {
+          throw new Error('LLM Advisor Service Unavailable');
+        },
+      },
+    });
+
+    const record = await failingAdvisorPipeline.processMessage({
+      id: 'msg-failing-advisor-01',
+      source: 'zalo',
+      sender: '0901234567',
+      content: 'Chị lấy giúp em 2 thùng ly 500ml trong suốt nha',
+      receivedAt: new Date().toISOString(),
+    });
+
+    expect(record.advisor.provider).toBe('deterministic');
+    expect(record.advisor.recommendation).toBe('NEEDS_HUMAN_REVIEW');
+    expect(record.advisor.notes).toContain('Advisor invocation failed');
+    // Policy decision still proceeds
+    expect(record.decision.action).toBe('QUOTE');
+    expect(record.action.executed).toBe(true);
+    // Audit record still persisted
+    const saved = getDecisionRecord(db, record.runId);
+    expect(saved).not.toBeNull();
+    expect(saved?.advisor.recommendation).toBe('NEEDS_HUMAN_REVIEW');
+  });
+
+  it('should support processOrder alias identically to processMessage', async () => {
+    const record = await pipeline.processOrder({
+      id: 'msg-alias-01',
+      source: 'zalo',
+      sender: '0901234567',
+      content: 'Chị lấy giúp em 4 thùng ly 500ml trong suốt nha',
+      receivedAt: new Date().toISOString(),
+    });
+
+    expect(record.decision.action).toBe('QUOTE');
+    expect(record.action.executed).toBe(true);
+    expect(record.runId).toBeDefined();
+  });
 });
 
 describe('Action Executor formatting & execution', () => {
