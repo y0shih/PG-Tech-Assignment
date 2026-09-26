@@ -11,7 +11,7 @@ export class AnthropicInterpreter implements OrderInterpreter {
   private model: string;
 
   constructor(apiKey?: string, model?: string) {
-    this.client = new Anthropic({ apiKey: apiKey || process.env.ANTHROPIC_API_KEY });
+    this.client = new Anthropic({ apiKey: apiKey || process.env.ORDER_DESK_API_KEY });
     this.model = model || process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
   }
 
@@ -67,7 +67,7 @@ export class AnthropicInterpreter implements OrderInterpreter {
 
 export function createInterpreter(): OrderInterpreter {
   const mode = process.env.INTERPRETER_MODE || 'mock';
-  if (mode === 'anthropic' && process.env.ANTHROPIC_API_KEY) {
+  if (mode === 'anthropic' && process.env.ORDER_DESK_API_KEY) {
     return new AnthropicInterpreter();
   }
   return new MockInterpreter();

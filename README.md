@@ -34,7 +34,7 @@ cp .env.example .env
 ```
 Default runs completely offline using `INTERPRETER_MODE=mock`. To enable live Claude Sonnet 5 calls:
 ```env
-ANTHROPIC_API_KEY=your_key_here
+ORDER_DESK_API_KEY=your_key_here
 ANTHROPIC_MODEL=claude-sonnet-5
 INTERPRETER_MODE=anthropic
 ```

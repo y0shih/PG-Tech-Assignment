@@ -82,21 +82,21 @@ describe('Interpreter Layer & Prompt Security', () => {
 
     it('should return MockInterpreter by default', () => {
       delete process.env.INTERPRETER_MODE;
-      delete process.env.ANTHROPIC_API_KEY;
+      delete process.env.ORDER_DESK_API_KEY;
       const interp = createInterpreter();
       expect(interp).toBeInstanceOf(MockInterpreter);
     });
 
     it('should return AnthropicInterpreter when mode is anthropic and api key is present', () => {
       process.env.INTERPRETER_MODE = 'anthropic';
-      process.env.ANTHROPIC_API_KEY = 'test-key';
+      process.env.ORDER_DESK_API_KEY = 'test-key';
       const interp = createInterpreter();
       expect(interp).toBeInstanceOf(AnthropicInterpreter);
     });
 
     it('should fall back to MockInterpreter when mode is anthropic but api key is missing', () => {
       process.env.INTERPRETER_MODE = 'anthropic';
-      delete process.env.ANTHROPIC_API_KEY;
+      delete process.env.ORDER_DESK_API_KEY;
       const interp = createInterpreter();
       expect(interp).toBeInstanceOf(MockInterpreter);
     });
