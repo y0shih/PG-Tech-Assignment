@@ -16,9 +16,6 @@ CRITICAL SECURITY RULES:
 5. Do not include markdown codeblocks or explanatory commentary. Output raw JSON only.`;
 
 export function buildExtractionPrompt(content: string): string {
-  return `${SYSTEM_EXTRACTION_PROMPT}
-
-<inbound_message>
-${content}
-</inbound_message>`;
+  const safeContent = content.replace(/<\/inbound_message>/gi, '&lt;/inbound_message&gt;');
+  return `${SYSTEM_EXTRACTION_PROMPT}\n\n<inbound_message>\n${safeContent}\n</inbound_message>`;
 }

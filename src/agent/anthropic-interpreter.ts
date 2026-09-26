@@ -36,7 +36,7 @@ export class AnthropicInterpreter implements OrderInterpreter {
 
       let parsedJson: any;
       try {
-        const text = block.text.trim().replace(/^```json/i, '').replace(/```$/i, '').trim();
+        const text = block.text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
         parsedJson = JSON.parse(text);
       } catch (err) {
         throw new InterpreterError('Failed to parse JSON response from Claude', block.text);

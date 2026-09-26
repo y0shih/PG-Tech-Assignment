@@ -8,7 +8,7 @@ export function evaluatePolicy(ctx: PolicyContext): PolicyEvaluationResult {
     isOrderIntent: ctx.intent === 'ORDER',
     toolsHealthy: ctx.toolFailureReason === null,
     customerResolved: ctx.customerResolution.records.length === 1 && !ctx.customerResolution.ambiguous,
-    creditApproved: ctx.customerResolution.records[0]?.creditStatus !== 'CREDIT_HOLD',
+    creditApproved: ctx.customerResolution.records.length === 1 && ctx.customerResolution.records[0]?.creditStatus !== 'CREDIT_HOLD',
     productResolved: ctx.productResolution.records.length === 1 && !ctx.productResolution.ambiguous,
     quantityValid: typeof ctx.quantity === 'number' && ctx.quantity > 0,
     priceResolved: ctx.price !== null,

@@ -1,4 +1,4 @@
-import type { CustomerRecord, InboundMessage, OrderIntent, ProductRecord } from './models.js';
+import type { CustomerRecord, OrderIntent, ProductRecord } from './models.js';
 
 export type ActionType = 'QUOTE' | 'ASK' | 'ESCALATE' | 'DO_NOTHING';
 
