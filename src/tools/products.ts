@@ -37,6 +37,7 @@ export class JsonProductRepository implements ProductRepository {
 
       // Token search
       const tokens = clean.split(/\s+/).filter(t => t.length > 1);
+      if (tokens.length === 0) return [];
       return this.products.filter(p => {
         const nameLower = p.name.toLowerCase();
         return tokens.every(token => nameLower.includes(token));

@@ -29,7 +29,11 @@ export async function withReliability<T>(
   const timeoutMs = options.timeoutMs ?? 2000;
   const retries = options.retries ?? 2;
   const backoffMs = options.backoffMs ?? 100;
-  const injection = options.injection ?? (process.env[`FAIL_${toolName.toUpperCase()}_LOOKUP`] as FailureInjectionMode) ?? 'none';
+  const envKey = toolName.toUpperCase();
+  const injection =
+    options.injection ??
+    ((process.env[`FAIL_${envKey}_LOOKUP`] || process.env[`FAIL_${envKey}`]) as FailureInjectionMode) ??
+    'none';
 
   if (injection === 'timeout') {
     throw new ToolTimeoutError(toolName, timeoutMs);

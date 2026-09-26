@@ -42,6 +42,11 @@ describe('Tool Repositories', () => {
     expect(matches.length).toBeGreaterThan(1);
   });
 
+  it('should return empty array when query contains only single-letter tokens', async () => {
+    const matches = await productRepo.search('a b c');
+    expect(matches).toEqual([]);
+  });
+
   it('should resolve single product for specific search', async () => {
     const matches = await productRepo.search('ly nhựa 500ml trong suốt');
     expect(matches).toHaveLength(1);

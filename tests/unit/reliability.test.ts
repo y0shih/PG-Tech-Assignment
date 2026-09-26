@@ -78,4 +78,15 @@ describe('Reliability Wrapper & Failure Injection', () => {
       delete process.env.FAIL_INVENTORY_LOOKUP;
     }
   });
+
+  it('should check environment variable without _LOOKUP suffix (e.g. FAIL_MESSAGING)', async () => {
+    process.env.FAIL_MESSAGING = 'error';
+    try {
+      const fn = async () => 10;
+      await expect(withReliability('messaging', fn))
+        .rejects.toBeInstanceOf(ToolError);
+    } finally {
+      delete process.env.FAIL_MESSAGING;
+    }
+  });
 });
