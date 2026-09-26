@@ -1,0 +1,50 @@
+[
+  {
+    "id": "PROD-001",
+    "name": "Ly nhựa 500ml trong suốt",
+    "sku": "LY-500-TS",
+    "unit": "thùng",
+    "stock": 50,
+    "basePrice": 120000
+  },
+  {
+    "id": "PROD-002",
+    "name": "Ly nhựa 500ml có nắp",
+    "sku": "LY-500-CN",
+    "unit": "thùng",
+    "stock": 40,
+    "basePrice": 135000
+  },
+  {
+    "id": "PROD-003",
+    "name": "Ly nhựa 700ml trong suốt",
+    "sku": "LY-700-TS",
+    "unit": "thùng",
+    "stock": 15,
+    "basePrice": 150000
+  },
+  {
+    "id": "PROD-004",
+    "name": "Túi zipper 20x30cm",
+    "sku": "ZIP-2030",
+    "unit": "kg",
+    "stock": 100,
+    "basePrice": 80000
+  },
+  {
+    "id": "PROD-005",
+    "name": "Túi zipper 30x40cm",
+    "sku": "ZIP-3040",
+    "unit": "kg",
+    "stock": 2,
+    "basePrice": 95000
+  },
+  {
+    "id": "PROD-006",
+    "name": "Hộp giấy kraft 500ml",
+    "sku": "HOP-500-KF",
+    "unit": "thùng",
+    "stock": 200,
+    "basePrice": 180000
+  }
+]

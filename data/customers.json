@@ -1,0 +1,30 @@
+[
+  {
+    "id": "CUST-001",
+    "name": "Quán Trà Sữa ABC",
+    "phone": "0901234567",
+    "email": "abc@milktea.vn",
+    "creditStatus": "ACTIVE"
+  },
+  {
+    "id": "CUST-002",
+    "name": "Cà Phê Sài Gòn Chi Nhánh 1",
+    "phone": "0918111222",
+    "email": "sg1@coffee.vn",
+    "creditStatus": "CREDIT_HOLD"
+  },
+  {
+    "id": "CUST-003",
+    "name": "Cà Phê Sài Gòn Chi Nhánh 2",
+    "phone": "0918111333",
+    "email": "sg2@coffee.vn",
+    "creditStatus": "ACTIVE"
+  },
+  {
+    "id": "CUST-004",
+    "name": "Tiệm Bánh Mì Minh",
+    "phone": "0987654321",
+    "email": "minh@banhmi.vn",
+    "creditStatus": "ACTIVE"
+  }
+]
