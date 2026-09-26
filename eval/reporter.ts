@@ -12,15 +12,19 @@ export interface EvalCaseResult {
   costUsd: number;
 }
 
-export function printEvalSummary(results: EvalCaseResult[], advisorName: string): boolean {
-  const total = results.length;
+export function printEvalSummary(
+  results: EvalCaseResult[],
+  advisorName: string,
+  expectedTotal: number = results.length
+): boolean {
+  const executed = results.length;
   const passed = results.filter(r => r.passed).length;
-  const failed = total - passed;
-  const passRate = ((passed / total) * 100).toFixed(1);
+  const failed = expectedTotal - passed;
+  const passRate = expectedTotal > 0 ? ((passed / expectedTotal) * 100).toFixed(1) : '0.0';
 
   const latencies = results.map(r => r.latencyMs).sort((a, b) => a - b);
-  const avgLatency = (latencies.reduce((a, b) => a + b, 0) / total).toFixed(0);
-  const p95Latency = latencies[Math.floor(total * 0.95)] || latencies[total - 1] || 0;
+  const avgLatency = executed > 0 ? (latencies.reduce((a, b) => a + b, 0) / executed).toFixed(0) : '0';
+  const p95Latency = latencies[Math.floor(executed * 0.95)] ?? latencies[executed - 1] ?? 0;
 
   const totalCost = results.reduce((acc, r) => acc + r.costUsd, 0);
   const totalTokensIn = results.reduce((acc, r) => acc + r.tokensIn, 0);
@@ -41,7 +45,10 @@ export function printEvalSummary(results: EvalCaseResult[], advisorName: string)
   );
 
   console.log('------------------------------------------------------------');
-  console.log(`Total Cases:    ${total}`);
+  console.log(`Total Cases:    ${expectedTotal}`);
+  if (executed !== expectedTotal) {
+    console.log(`Executed:       ${executed} (aborted early)`);
+  }
   console.log(`Passed:         ${passed}`);
   console.log(`Failed:         ${failed}`);
   console.log(`Pass Rate:      ${passRate}%`);
@@ -51,5 +58,5 @@ export function printEvalSummary(results: EvalCaseResult[], advisorName: string)
   console.log(`Total Cost:     $${totalCost.toFixed(5)} (Cap: $20.00)`);
   console.log('============================================================\n');
 
-  return failed === 0;
+  return failed === 0 && executed === expectedTotal;
 }

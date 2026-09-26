@@ -15,7 +15,19 @@ import { OrderDeskPipeline } from '../src/application/pipeline.js';
 
 dotenv.config();
 
-export async function runEvaluation(): Promise<boolean> {
+function resolveAdvisorName(): string {
+  const advisorArg = process.argv.find(arg => arg.startsWith('--advisor='));
+  if (advisorArg) {
+    const val = advisorArg.split('=')[1]?.trim();
+    if (val) return val.toLowerCase();
+  }
+  return (process.env.DECISION_ADVISOR || 'deterministic').toLowerCase();
+}
+
+export async function runEvaluation(targetAdvisor?: string): Promise<boolean> {
+  const advisorName = targetAdvisor || resolveAdvisorName();
+  process.env.DECISION_ADVISOR = advisorName;
+
   const db = initDatabase(':memory:');
   const advisor = createAdvisor();
   const interpreter = createInterpreter();
@@ -81,8 +93,7 @@ export async function runEvaluation(): Promise<boolean> {
     });
   }
 
-  const advisorName = process.env.DECISION_ADVISOR || 'deterministic';
-  return printEvalSummary(results, advisorName);
+  return printEvalSummary(results, advisorName, EVAL_CASES.length);
 }
 
 const currentScript = process.argv[1] ? path.resolve(process.argv[1]) : '';

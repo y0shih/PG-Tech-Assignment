@@ -9,7 +9,7 @@
     "test:watch": "vitest",
     "start": "tsx src/api/server.ts",
     "eval": "tsx eval/runner.ts",
-    "eval:jev": "DECISION_ADVISOR=jev tsx eval/runner.ts"
+    "eval:jev": "tsx eval/runner.ts --advisor=jev"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

@@ -71,6 +71,46 @@ describe('Evaluation Reporter', () => {
     logSpy.mockRestore();
     tableSpy.mockRestore();
   });
+
+  it('should return false when run is aborted early (executed < expectedTotal)', () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const tableSpy = vi.spyOn(console, 'table').mockImplementation(() => {});
+
+    // Only 2 cases executed, but 18 expected
+    const passed = printEvalSummary([
+      {
+        id: 'test-1',
+        description: 'Test case 1',
+        passed: true,
+        expectedAction: 'QUOTE',
+        actualAction: 'QUOTE',
+        expectedReason: 'ORDER_READY',
+        actualReason: 'ORDER_READY',
+        latencyMs: 10,
+        tokensIn: 100,
+        tokensOut: 50,
+        costUsd: 0.001,
+      },
+      {
+        id: 'test-2',
+        description: 'Test case 2',
+        passed: true,
+        expectedAction: 'ASK',
+        actualAction: 'ASK',
+        expectedReason: 'QUANTITY_MISSING',
+        actualReason: 'QUANTITY_MISSING',
+        latencyMs: 0,
+        tokensIn: 0,
+        tokensOut: 0,
+        costUsd: 0,
+      },
+    ], 'deterministic', 18);
+
+    expect(passed).toBe(false);
+
+    logSpy.mockRestore();
+    tableSpy.mockRestore();
+  });
 });
 
 describe('Evaluation Runner', () => {
@@ -79,6 +119,17 @@ describe('Evaluation Runner', () => {
     const tableSpy = vi.spyOn(console, 'table').mockImplementation(() => {});
 
     const success = await runEvaluation();
+    expect(success).toBe(true);
+
+    logSpy.mockRestore();
+    tableSpy.mockRestore();
+  });
+
+  it('should support running with jev advisor parameter', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const tableSpy = vi.spyOn(console, 'table').mockImplementation(() => {});
+
+    const success = await runEvaluation('jev');
     expect(success).toBe(true);
 
     logSpy.mockRestore();
