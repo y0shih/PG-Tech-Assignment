@@ -18,15 +18,15 @@ External systems and repositories are wrapped in a typed reliability decorator (
 
 ## 4. Evaluation Results
 The test suite includes 18 automated end-to-end scenarios covering normal orders, ambiguous products, credit holds, duplicates, prompt injections, low inventory, and system failures:
-- Deterministic Advisor: 18 / 18 passed (100% pass rate).
-- Jev Advisor: 18 / 18 passed (100% pass rate).
-Both advisor configurations verify that bounded recommendation systems cannot bypass hard credit holds, duplicate detection, or tool failures.
+- **Offline Mock Mode (`INTERPRETER_MODE=mock`)**: 18 / 18 passed (100% pass rate, < 5ms latency, $0.00 cost).
+- **Live Anthropic Mode (`INTERPRETER_MODE=anthropic`)**: 18 / 18 passed (100% pass rate, 1,846ms average latency, $0.056 total cost across all 18 benchmark cases).
+- **Advisor Configurations**: Verified across both Deterministic Advisor and Jev Advisor stub. Both demonstrate that advisory layers cannot override hard business policies (credit holds, duplicate suppression, tool failures). Note: Jev is currently structured as an in-repo simulated advisor stub (`src/advisors/jev-advisor.ts`) providing bounded recommendations without an external API key dependency.
 
 ## 5. Cost and Latency
-- Prompts use compact system instructions (< 250 tokens).
+- Prompts use compact system instructions (< 250 tokens) with explicit intent definitions for price/quote requests.
 - Extraction schema requires < 60 completion tokens.
 - Mock mode achieves < 5ms latency at $0.00 cost.
-- Claude Sonnet 5 calls average ~650ms latency with an estimated cost of ~$0.0015 per message, well below the $20 project ceiling (sufficient for > 10,000 runs). The test runner enforces an automated cutoff if cumulative spend nears $20.
+- Live Claude Sonnet calls average ~1,846ms latency with an observed cost of ~$0.0031 per message (~$0.056 for full 18-case suite), well below the $20 project budget ceiling (sufficient for > 6,000 live runs). The runner enforces an automated cutoff if cumulative spend nears $20.
 
 ## 6. n8n Migration
 In production, n8n should serve strictly as the integration and transport orchestrator, not the policy engine:
