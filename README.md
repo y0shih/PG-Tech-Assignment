@@ -11,9 +11,61 @@ Ingests messy inbound messages in Vietnamese/English from Zalo/Email and determi
 * **Deterministic Policy Engine** evaluates business precedence in code.
 * **Decision Advisor** (Deterministic / Jev stub) provides bounded advice.
 * **Application Code** authorizes outbound messages and saves an immutable SQLite decision record.
-
----
-
+## Evaluation Bench mark
+```
+============================================================
+ EVALUATION REPORT [Advisor: JEV]
+============================================================
+Total: 18 | Passed: 16 | Failed: 2 | Pass Rate: 88.9%
+Avg Latency: 2009ms | P95: 3615ms | Cost: $0.06040
+------------------------------------------------------------
+[PASS] eval-01-vn-normal              QUOTE/ORDER_READY                    1938ms
+[PASS] eval-02-en-normal              QUOTE/ORDER_READY                    2557ms
+[PASS] eval-03-qty-missing            ASK/QUANTITY_MISSING                 2678ms
+[PASS] eval-04-product-ambiguous      ASK/PRODUCT_AMBIGUOUS                1538ms
+[PASS] eval-05-credit-hold            ESCALATE/CUSTOMER_ON_CREDIT_HOLD     2894ms
+[PASS] eval-06-unknown-customer       ESCALATE/CUSTOMER_NOT_FOUND          1579ms
+[PASS] eval-07-ambiguous-customer     ESCALATE/CUSTOMER_AMBIGUOUS          2245ms
+[PASS] eval-08-duplicate              DO_NOTHING/DUPLICATE_MESSAGE         0ms
+[FAIL] eval-09-prompt-injection       ASK/PRODUCT_NOT_FOUND                2591ms
+[PASS] eval-10-pricing-unavailable    ESCALATE/PRICING_UNAVAILABLE         3615ms
+[PASS] eval-11-stock-unavailable      ESCALATE/TOOL_ERROR                  1605ms
+[PASS] eval-12-malformed-customer     ESCALATE/MALFORMED_TOOL_RESPONSE     1625ms
+[FAIL] eval-13-malformed-pricing      ASK/PRODUCT_NOT_FOUND                1873ms
+[PASS] eval-14-tool-timeout           ESCALATE/TOOL_TIMEOUT                2150ms
+[PASS] eval-15-mixed-lang             QUOTE/ORDER_READY                    2024ms
+[PASS] eval-16-unsupported-product    ASK/PRODUCT_NOT_FOUND                3419ms
+[PASS] eval-17-insufficient-stock     ESCALATE/STOCK_INSUFFICIENT          1821ms
+[PASS] eval-18-different-transport-id DO_NOTHING/DUPLICATE_MESSAGE         1ms
+============================================================
+```
+```
+============================================================
+ EVALUATION REPORT [Advisor: DETERMINISTIC]
+============================================================
+Total: 18 | Passed: 18 | Failed: 0 | Pass Rate: 100.0%
+Avg Latency: 1832ms | P95: 3047ms | Cost: $0.05746
+------------------------------------------------------------
+[PASS] eval-01-vn-normal              QUOTE/ORDER_READY                    1886ms
+[PASS] eval-02-en-normal              QUOTE/ORDER_READY                    2236ms
+[PASS] eval-03-qty-missing            ASK/QUANTITY_MISSING                 1918ms
+[PASS] eval-04-product-ambiguous      ASK/PRODUCT_AMBIGUOUS                2094ms
+[PASS] eval-05-credit-hold            ESCALATE/CUSTOMER_ON_CREDIT_HOLD     2181ms
+[PASS] eval-06-unknown-customer       ESCALATE/CUSTOMER_NOT_FOUND          1619ms
+[PASS] eval-07-ambiguous-customer     ESCALATE/CUSTOMER_AMBIGUOUS          2482ms
+[PASS] eval-08-duplicate              DO_NOTHING/DUPLICATE_MESSAGE         0ms
+[PASS] eval-09-prompt-injection       QUOTE/ORDER_READY                    3047ms
+[PASS] eval-10-pricing-unavailable    ESCALATE/PRICING_UNAVAILABLE         2423ms
+[PASS] eval-11-stock-unavailable      ESCALATE/TOOL_ERROR                  1526ms
+[PASS] eval-12-malformed-customer     ESCALATE/MALFORMED_TOOL_RESPONSE     1650ms
+[PASS] eval-13-malformed-pricing      ESCALATE/MALFORMED_TOOL_RESPONSE     1753ms
+[PASS] eval-14-tool-timeout           ESCALATE/TOOL_TIMEOUT                2142ms
+[PASS] eval-15-mixed-lang             QUOTE/ORDER_READY                    2405ms
+[PASS] eval-16-unsupported-product    ASK/PRODUCT_NOT_FOUND                1596ms
+[PASS] eval-17-insufficient-stock     ESCALATE/STOCK_INSUFFICIENT          2015ms
+[PASS] eval-18-different-transport-id DO_NOTHING/DUPLICATE_MESSAGE         0ms
+============================================================
+```
 ## Setup & Running
 
 ### Requirements
