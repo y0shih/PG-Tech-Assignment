@@ -79,3 +79,18 @@ export function getDecisionRecord(db: DatabaseSync, runId: string): DecisionReco
   if (!row) return null;
   return JSON.parse(row.record_json) as DecisionRecord;
 }
+
+export function listDecisionRecords(db: DatabaseSync, limit: number = 50): DecisionRecord[] {
+  const query = db.prepare(`SELECT record_json FROM decisions ORDER BY rowid DESC LIMIT ?`);
+  const rows = query.all(limit) as { record_json: string }[];
+  return rows.map(r => JSON.parse(r.record_json) as DecisionRecord);
+}
+
+export function clearDatabase(db: DatabaseSync): void {
+  db.exec(`
+    DELETE FROM inbound_messages;
+    DELETE FROM decisions;
+  `);
+}
+
+

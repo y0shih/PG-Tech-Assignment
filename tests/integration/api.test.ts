@@ -139,6 +139,59 @@ describe('HTTP API Endpoints', () => {
     }
   });
 
+  it('should return HTML dashboard on GET /', async () => {
+    const res = await fetch(`${baseUrl}/`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/html');
+    const text = await res.text();
+    expect(text).toContain('Delta Packaging');
+    expect(text).toContain('Run Eval');
+  });
+
+  it('should list decisions on GET /v1/decisions', async () => {
+    const res = await fetch(`${baseUrl}/v1/decisions`);
+    expect(res.status).toBe(200);
+    const body: any = await res.json();
+    expect(Array.isArray(body)).toBe(true);
+    expect(body.length).toBeGreaterThanOrEqual(1);
+    expect(body[0].runId).toBeDefined();
+  });
+
+  it('should execute eval suite on POST /v1/eval/run', async () => {
+    const res = await fetch(`${baseUrl}/v1/eval/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ advisor: 'deterministic' }),
+    });
+    expect(res.status).toBe(200);
+    const body: any = await res.json();
+    expect(body.totalCases).toBe(18);
+    expect(body.passed).toBe(18);
+    expect(body.passRate).toBe('100.0%');
+    expect(Array.isArray(body.results)).toBe(true);
+  });
+
+  it('should return catalog and customers on GET /v1/catalog', async () => {
+    const res = await fetch(`${baseUrl}/v1/catalog`);
+    expect(res.status).toBe(200);
+    const body: any = await res.json();
+    expect(Array.isArray(body.products)).toBe(true);
+    expect(Array.isArray(body.customers)).toBe(true);
+    expect(body.products.length).toBeGreaterThan(0);
+    expect(body.customers.length).toBeGreaterThan(0);
+  });
+
+  it('should clear decisions on POST /v1/decisions/clear', async () => {
+    const clearRes = await fetch(`${baseUrl}/v1/decisions/clear`, { method: 'POST' });
+    expect(clearRes.status).toBe(200);
+    const body: any = await clearRes.json();
+    expect(body.status).toBe('cleared');
+
+    const listRes = await fetch(`${baseUrl}/v1/decisions`);
+    const listBody: any = await listRes.json();
+    expect(listBody).toHaveLength(0);
+  });
+
   it('should return 404 for unknown route', async () => {
     const res = await fetch(`${baseUrl}/v1/nonexistent`);
     expect(res.status).toBe(404);

@@ -6,6 +6,7 @@ import {
   saveInboundMessage,
   saveDecisionRecord,
   getDecisionRecord,
+  listDecisionRecords,
 } from '../../src/infrastructure/db.js';
 import type { DecisionRecord } from '../../src/domain/decisions.js';
 
@@ -64,5 +65,37 @@ describe('Database & Idempotency Storage', () => {
     expect(retrieved).not.toBeNull();
     expect(retrieved?.decision.reason).toBe('CUSTOMER_NOT_FOUND');
     expect(retrieved?.metrics.latencyMs).toBe(50);
+  });
+
+  it('should list all decision records in reverse chronological order with optional limit', () => {
+    const makeRecord = (id: string): DecisionRecord => ({
+      runId: id,
+      messageId: `msg-${id}`,
+      fingerprint: `fp-${id}`,
+      receivedAt: new Date().toISOString(),
+      input: { source: 'zalo', sender: '0901', content: id },
+      interpretation: null,
+      resolution: { customer: null, products: [], stock: null, unitPrice: null },
+      policyChecks: { duplicate: false },
+      advisor: { provider: 'deterministic', recommendation: 'QUOTE' },
+      decision: { action: 'QUOTE', reason: 'ORDER_READY' },
+      action: { executed: true },
+      metrics: { latencyMs: 10, inputTokens: 0, outputTokens: 0, costUsd: 0 },
+    });
+
+    saveDecisionRecord(db, makeRecord('run-1'));
+    saveDecisionRecord(db, makeRecord('run-2'));
+    saveDecisionRecord(db, makeRecord('run-3'));
+
+    const all = listDecisionRecords(db);
+    expect(all).toHaveLength(3);
+    expect(all[0].runId).toBe('run-3');
+    expect(all[1].runId).toBe('run-2');
+    expect(all[2].runId).toBe('run-1');
+
+    const limited = listDecisionRecords(db, 2);
+    expect(limited).toHaveLength(2);
+    expect(limited[0].runId).toBe('run-3');
+    expect(limited[1].runId).toBe('run-2');
   });
 });

@@ -24,7 +24,19 @@ function resolveAdvisorName(): string {
   return (process.env.DECISION_ADVISOR || 'deterministic').toLowerCase();
 }
 
-export async function runEvaluation(targetAdvisor?: string): Promise<boolean> {
+export interface EvalSummaryReport {
+  advisor: string;
+  totalCases: number;
+  passed: number;
+  failed: number;
+  passRate: string;
+  avgLatencyMs: number;
+  p95LatencyMs: number;
+  totalCostUsd: number;
+  results: EvalCaseResult[];
+}
+
+export async function runEvalCases(targetAdvisor?: string): Promise<EvalSummaryReport> {
   const advisorName = targetAdvisor || resolveAdvisorName();
   process.env.DECISION_ADVISOR = advisorName;
 
@@ -93,7 +105,27 @@ export async function runEvaluation(targetAdvisor?: string): Promise<boolean> {
     });
   }
 
-  return printEvalSummary(results, advisorName, EVAL_CASES.length);
+  const passedCount = results.filter(r => r.passed).length;
+  const latencies = results.map(r => r.latencyMs).sort((a, b) => a - b);
+  const avgLatency = results.length > 0 ? results.reduce((acc, r) => acc + r.latencyMs, 0) / results.length : 0;
+  const p95Latency = latencies[Math.floor(results.length * 0.95)] ?? latencies[results.length - 1] ?? 0;
+
+  return {
+    advisor: advisorName,
+    totalCases: EVAL_CASES.length,
+    passed: passedCount,
+    failed: EVAL_CASES.length - passedCount,
+    passRate: `${((passedCount / EVAL_CASES.length) * 100).toFixed(1)}%`,
+    avgLatencyMs: Math.round(avgLatency),
+    p95LatencyMs: p95Latency,
+    totalCostUsd: cumulativeSpend,
+    results,
+  };
+}
+
+export async function runEvaluation(targetAdvisor?: string): Promise<boolean> {
+  const report = await runEvalCases(targetAdvisor);
+  return printEvalSummary(report.results, report.advisor, report.totalCases);
 }
 
 const currentScript = process.argv[1] ? path.resolve(process.argv[1]) : '';
