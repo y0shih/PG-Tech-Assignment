@@ -27,7 +27,11 @@ export class ToolMalformedError extends ToolError {
 }
 
 export class InterpreterError extends ApplicationError {
-  constructor(message: string, public readonly rawOutput?: string) {
+  constructor(
+    message: string,
+    public readonly rawOutput?: string,
+    public readonly metrics?: { inputTokens: number; outputTokens: number; costUsd: number; latencyMs: number }
+  ) {
     super(`Interpreter error: ${message}`);
     this.name = 'InterpreterError';
   }

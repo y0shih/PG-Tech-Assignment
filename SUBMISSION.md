@@ -42,3 +42,16 @@ Claude Sonnet was utilized during design brainstorming, structuring test case pe
 ## 8. Known Gaps
 - Multi-line item orders: Currently optimized for single-product orders. Expanding to compound baskets requires list-based extraction in `OrderIntent`.
 - Unit conversions: Supports standard packaging units (`thùng`, `kg`, `hộp`); complex fractional unit math requires dedicated conversion tables.
+
+## 9. Inbound Text Ingestion & Catalog Search Flow
+When unstructured text is submitted via the test input or inbound webhook:
+1. **Idempotency & Fingerprinting**: A normalized SHA-256 hash (`source|sender|normalized_content`) traps duplicate submissions in SQLite before triggering LLM or search layers.
+2. **Untrusted Text Isolation**: Inbound text is wrapped in `<inbound_message>` XML tags, neutralizing prompt injection attempts (e.g. discount bypass commands) and forcing strict entity extraction into `OrderIntent`.
+3. **Hierarchical Catalog Search**:
+   - **Exact Matching**: Searches product repository against exact SKU or product title.
+   - **Multi-Token Intersect Search**: If no exact match, tokenizes search string and matches items containing all tokens (e.g., `"ly 500ml trong suốt"` resolves to `LY-500-TS`).
+   - **Ambiguity Detection**: If multiple catalog items match (e.g., query `"ly 500ml"` matches both clear and lidded varieties), the engine flags `PRODUCT_AMBIGUOUS` and asks the customer to clarify instead of guessing.
+   - **Catalog Absence**: If zero items match, flags `PRODUCT_NOT_FOUND` to prompt the customer for catalog-supported items.
+4. **Customer Resolution Fallback**: Matches sender ID (phone/email) first; if sender is new, falls back to customer name reference extracted by the LLM from the text.
+5. **Interactive UI Audit**: The dashboard renders a full audit trace for every text submission, showing the raw input, extracted entities, matched warehouse SKUs, stock availability, policy checks, and outbound quotes.
+

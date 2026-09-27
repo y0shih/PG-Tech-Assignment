@@ -114,7 +114,10 @@ describe('Evaluation Reporter', () => {
 });
 
 describe('Evaluation Runner', () => {
+  const originalMode = process.env.INTERPRETER_MODE;
+
   it('should execute full 18-case evaluation successfully in mock mode', async () => {
+    process.env.INTERPRETER_MODE = 'mock';
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const tableSpy = vi.spyOn(console, 'table').mockImplementation(() => {});
 
@@ -123,9 +126,11 @@ describe('Evaluation Runner', () => {
 
     logSpy.mockRestore();
     tableSpy.mockRestore();
+    process.env.INTERPRETER_MODE = originalMode;
   });
 
   it('should support running with jev advisor parameter', async () => {
+    process.env.INTERPRETER_MODE = 'mock';
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const tableSpy = vi.spyOn(console, 'table').mockImplementation(() => {});
 
@@ -134,5 +139,6 @@ describe('Evaluation Runner', () => {
 
     logSpy.mockRestore();
     tableSpy.mockRestore();
+    process.env.INTERPRETER_MODE = originalMode;
   });
 });

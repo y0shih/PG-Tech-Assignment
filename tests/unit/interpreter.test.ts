@@ -161,6 +161,35 @@ describe('Interpreter Layer & Prompt Security', () => {
       expect(result.language).toBe('en');
     });
 
+    it('should find text block even when preceded by thinking block', async () => {
+      const anthropic = new AnthropicInterpreter('test-key');
+      const fakeClient = {
+        messages: {
+          create: vi.fn().mockResolvedValue({
+            content: [
+              {
+                type: 'thinking',
+                thinking: 'User wants 10 kraft boxes. Intent is ORDER.',
+              },
+              {
+                type: 'text',
+                text: '{"intent":"ORDER","customerReference":null,"productReference":"hộp giấy kraft 500ml","quantity":10,"language":"en"}',
+              },
+            ],
+            usage: { input_tokens: 120, output_tokens: 60 },
+          }),
+        },
+      };
+      (anthropic as any).client = fakeClient;
+
+      const result = await anthropic.interpretWithMetrics('10 kraft boxes');
+      expect(result.intent.intent).toBe('ORDER');
+      expect(result.intent.quantity).toBe(10);
+      expect(result.metrics.inputTokens).toBe(120);
+      expect(result.metrics.outputTokens).toBe(60);
+      expect(result.rawOutput).toContain('hộp giấy kraft');
+    });
+
     it('should throw InterpreterError when response is not valid JSON', async () => {
       const anthropic = new AnthropicInterpreter('test-key');
       const fakeClient = {

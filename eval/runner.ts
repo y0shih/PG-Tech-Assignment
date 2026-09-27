@@ -36,9 +36,15 @@ export interface EvalSummaryReport {
   results: EvalCaseResult[];
 }
 
-export async function runEvalCases(targetAdvisor?: string): Promise<EvalSummaryReport> {
+export async function runEvalCases(targetAdvisor?: string, targetInterpreterMode?: string): Promise<EvalSummaryReport> {
   const advisorName = targetAdvisor || resolveAdvisorName();
   process.env.DECISION_ADVISOR = advisorName;
+  const previousInterpreterMode = process.env.INTERPRETER_MODE;
+  if (targetInterpreterMode) {
+    process.env.INTERPRETER_MODE = targetInterpreterMode;
+  } else if (process.env.VITEST) {
+    process.env.INTERPRETER_MODE = 'mock';
+  }
 
   const db = initDatabase(':memory:');
   const advisor = createAdvisor();
@@ -109,6 +115,8 @@ export async function runEvalCases(targetAdvisor?: string): Promise<EvalSummaryR
   const latencies = results.map(r => r.latencyMs).sort((a, b) => a - b);
   const avgLatency = results.length > 0 ? results.reduce((acc, r) => acc + r.latencyMs, 0) / results.length : 0;
   const p95Latency = latencies[Math.floor(results.length * 0.95)] ?? latencies[results.length - 1] ?? 0;
+
+  process.env.INTERPRETER_MODE = previousInterpreterMode;
 
   return {
     advisor: advisorName,

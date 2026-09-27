@@ -98,6 +98,7 @@ export class MockInterpreter implements OrderInterpreter {
 
     return {
       intent: parsed,
+      rawOutput: JSON.stringify(parsed),
       metrics: {
         inputTokens: 0,
         outputTokens: 0,

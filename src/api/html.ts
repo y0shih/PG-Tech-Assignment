@@ -312,15 +312,25 @@ export function renderDashboardHtml(): string {
           out += '   - Raw Message:   "' + inp.content + '"\\n';
           out += '   - Fingerprint:   ' + (item.fingerprint || 'N/A') + '\\n\\n';
 
-          out += '>> [3] WHAT LLM PARSED (Normalized Intent):\\n';
-          if (!inter) {
+          out += '>> [3] WHAT LLM SENT BACK (Raw Output & Normalized Intent):\\n';
+          if (item.llmOutput) {
+            if (item.llmOutput.rawText) {
+              out += '   - Raw LLM Response: "' + item.llmOutput.rawText.replace(/\\n/g, ' ') + '"\\n';
+            }
+            if (item.llmOutput.error) {
+              out += '   - Interpreter Error: ' + item.llmOutput.error + '\\n';
+            }
+          }
+          if (inter) {
+            out += '   - Parsed Intent:     ' + inter.intent + '\\n';
+            out += '   - Customer Ref:      ' + (inter.customerReference || 'null (inferred from sender)') + '\\n';
+            out += '   - Product Ref:       ' + (inter.productReference || 'null') + '\\n';
+            out += '   - Quantity:          ' + (inter.quantity !== null && inter.quantity !== undefined ? inter.quantity : 'MISSING') + '\\n';
+            out += '   - Language:          ' + inter.language + '\\n\\n';
+          } else if (pol.isDuplicate || pol.duplicate) {
             out += '   (No interpretation — blocked early by duplicate/idempotency gate)\\n\\n';
           } else {
-            out += '   - Intent:        ' + inter.intent + '\\n';
-            out += '   - Customer Ref:  ' + (inter.customerReference || 'null (inferred from sender)') + '\\n';
-            out += '   - Product Ref:   ' + (inter.productReference || 'null') + '\\n';
-            out += '   - Quantity:      ' + (inter.quantity !== null && inter.quantity !== undefined ? inter.quantity : 'MISSING') + '\\n';
-            out += '   - Language:      ' + inter.language + '\\n\\n';
+            out += '   (No valid interpretation parsed from LLM output)\\n\\n';
           }
 
           out += '>> [4] WHAT I HAVE (Fact Resolution from Repositories):\\n';
@@ -340,8 +350,20 @@ export function renderDashboardHtml(): string {
           out += '   - Resolved Price:  ' + (res.unitPrice !== null && res.unitPrice !== undefined ? res.unitPrice.toLocaleString() + ' VND' : 'N/A') + '\\n\\n';
 
           out += '>> [5] POLICY GATES CHECKLIST:\\n';
-          const checks = Object.entries(pol).map(([k, v]) => (v ? '[PASS] ' : '[FAIL] ') + k).join(' | ');
-          out += '   ' + (checks || 'None') + '\\n\\n';
+          const entries = Object.entries(pol);
+          if (entries.length === 0) {
+            out += '   (None)\\n\\n';
+          } else {
+            const half = Math.ceil(entries.length / 2);
+            for (let i = 0; i < half; i++) {
+              const left = entries[i];
+              const right = entries[i + half];
+              const leftStr = (left[1] ? '[PASS] ' : '[FAIL] ') + left[0].padEnd(25);
+              const rightStr = right ? (right[1] ? '[PASS] ' : '[FAIL] ') + right[0] : '';
+              out += '   ' + leftStr + ' ' + rightStr + '\\n';
+            }
+            out += '\\n';
+          }
 
           out += '>> [6] FINAL ACTION & EXECUTION:\\n';
           out += '   - ACTION:        ' + dec.action + '\\n';

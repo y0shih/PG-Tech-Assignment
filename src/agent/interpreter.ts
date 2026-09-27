@@ -9,6 +9,7 @@ export interface InterpretationMetrics {
 
 export interface InterpretationResult {
   intent: OrderIntent;
+  rawOutput?: string;
   metrics: InterpretationMetrics;
 }
 

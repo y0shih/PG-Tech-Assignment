@@ -7,6 +7,7 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "dev": "tsx watch src/api/server.ts",
     "start": "tsx src/api/server.ts",
     "eval": "tsx eval/runner.ts",
     "eval:jev": "tsx eval/runner.ts --advisor=jev"

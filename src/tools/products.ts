@@ -20,7 +20,7 @@ export interface ProductRepository {
 
 export class JsonProductRepository implements ProductRepository {
   private products: ProductRecord[];
-
+// Mockup, can hook up with db
   constructor(filePath?: string) {
     const defaultPath = path.resolve(process.cwd(), 'data/products.json');
     const content = readFileSync(filePath || defaultPath, 'utf8');

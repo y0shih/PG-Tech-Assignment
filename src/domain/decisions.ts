@@ -34,6 +34,10 @@ export interface DecisionRecord {
     sender: string;
     content: string;
   };
+  llmOutput?: {
+    rawText: string | null;
+    error?: string | null;
+  };
   interpretation: OrderIntent | null;
   resolution: {
     customer: CustomerRecord | null;

@@ -3,7 +3,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import type { InboundMessage, CustomerRecord, ProductRecord, OrderIntent } from '../domain/models.js';
 import type { DecisionRecord, DecisionReason } from '../domain/decisions.js';
 import { DecisionReasons } from '../domain/decisions.js';
-import { ToolTimeoutError, ToolMalformedError, ToolError } from '../domain/errors.js';
+import { ToolTimeoutError, ToolMalformedError, ToolError, InterpreterError } from '../domain/errors.js';
 import {
   computeFingerprint,
   isDuplicateMessage,
@@ -77,6 +77,8 @@ export class OrderDeskPipeline {
     // 2. Interpreter Layer
     let interpretation: OrderIntent | null = null;
     let interpretationValid = true;
+    let rawLlmOutput: string | null = null;
+    let llmError: string | null = null;
     let tokensIn = 0;
     let tokensOut = 0;
     let costUsd = 0;
@@ -84,11 +86,23 @@ export class OrderDeskPipeline {
     try {
       const res = await this.deps.interpreter.interpretWithMetrics(message.content);
       interpretation = res.intent;
+      rawLlmOutput = res.rawOutput ?? JSON.stringify(res.intent);
       tokensIn = res.metrics.inputTokens;
       tokensOut = res.metrics.outputTokens;
       costUsd = res.metrics.costUsd;
-    } catch {
+    } catch (err) {
       interpretationValid = false;
+      if (err instanceof InterpreterError) {
+        llmError = err.message;
+        rawLlmOutput = err.rawOutput ?? null;
+        if (err.metrics) {
+          tokensIn = err.metrics.inputTokens;
+          tokensOut = err.metrics.outputTokens;
+          costUsd = err.metrics.costUsd;
+        }
+      } else {
+        llmError = (err as Error).message;
+      }
     }
 
     // 3. Fact Resolution
@@ -219,6 +233,10 @@ export class OrderDeskPipeline {
       fingerprint,
       receivedAt: message.receivedAt,
       input: { source: message.source, sender: message.sender, content: message.content },
+      llmOutput: {
+        rawText: rawLlmOutput,
+        error: llmError,
+      },
       interpretation,
       resolution: {
         customer: customerRecords[0] || null,
